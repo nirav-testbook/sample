@@ -6,17 +6,19 @@ import (
 	"net/url"
 	"time"
 
-	"sample/common/auth/token"
-	chttp "sample/common/http"
-	"sample/tb/lesson"
-
 	"github.com/go-kit/kit/endpoint"
+	kitlog "github.com/go-kit/kit/log"
 	"github.com/go-kit/kit/sd"
+	kitconsul "github.com/go-kit/kit/sd/consul"
 	"github.com/go-kit/kit/sd/lb"
 	kithttp "github.com/go-kit/kit/transport/http"
+
+	"sample/common/auth/token"
+	chttp "sample/common/http"
+	"sample/tb/question"
 )
 
-func New(instance string, client *http.Client) (lesson.Service, error) {
+func New(instance string, client *http.Client) (question.Service, error) {
 	u, err := url.Parse(instance)
 	if err != nil {
 		return nil, err
@@ -31,7 +33,7 @@ func New(instance string, client *http.Client) (lesson.Service, error) {
 		http.MethodPost,
 		copyURL(u, "/question"),
 		chttp.EncodeJSONRequest,
-		lesson.DecodeAddResponse,
+		question.DecodeAddResponse,
 		opts...,
 	).Endpoint()
 
@@ -39,7 +41,7 @@ func New(instance string, client *http.Client) (lesson.Service, error) {
 		http.MethodGet,
 		copyURL(u, "/question"),
 		chttp.EncodeSchemaRequest,
-		lesson.DecodeGetResponse,
+		question.DecodeGetResponse,
 		opts...,
 	).Endpoint()
 
@@ -47,39 +49,39 @@ func New(instance string, client *http.Client) (lesson.Service, error) {
 		http.MethodGet,
 		copyURL(u, "/question/list"),
 		chttp.EncodeSchemaRequest,
-		lesson.DecodeListResponse,
+		question.DecodeListResponse,
 		opts...,
 	).Endpoint()
 
-	return &lesson.Endpoint{
-		AddEndpoint:  lesson.AddEndpoint(addEndpoint),
-		GetEndpoint:  lesson.GetEndpoint(getEndpoint),
-		ListEndpoint: lesson.ListEndpoint(listEndpoint),
+	return &question.Endpoint{
+		AddEndpoint:  question.AddEndpoint(addEndpoint),
+		GetEndpoint:  question.GetEndpoint(getEndpoint),
+		ListEndpoint: question.ListEndpoint(listEndpoint),
 	}, nil
 }
 
-func NewWithLB(instancer *kitconsul.Instancer, retryMax int, retryTimeout time.Duration, logger kitlog.Logger, client *http.Client) lesson.Service {
-	var endpoints lesson.Endpoint
+func NewWithLB(instancer *kitconsul.Instancer, retryMax int, retryTimeout time.Duration, logger kitlog.Logger, client *http.Client) question.Service {
+	var endpoints question.Endpoint
 	{
-		factory := factoryFor(lesson.MakeAddEndpoint, client)
+		factory := factoryFor(question.MakeAddEndpoint, client)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.AddEndpoint = lesson.AddEndpoint(retry)
+		endpoints.AddEndpoint = question.AddEndpoint(retry)
 	}
 	{
-		factory := factoryFor(lesson.MakeGetEndpoint, client)
+		factory := factoryFor(question.MakeGetEndpoint, client)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.GetEndpoint = lesson.GetEndpoint(retry)
+		endpoints.GetEndpoint = question.GetEndpoint(retry)
 	}
 	{
-		factory := factoryFor(lesson.MakeListEndpoint, client)
+		factory := factoryFor(question.MakeListEndpoint, client)
 		endpointer := sd.NewEndpointer(instancer, factory, logger)
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
-		endpoints.ListEndpoint = lesson.ListEndpoint(retry)
+		endpoints.ListEndpoint = question.ListEndpoint(retry)
 	}
 	return endpoints
 }
@@ -90,7 +92,7 @@ func copyURL(u *url.URL, path string) *url.URL {
 	return &c
 }
 
-func factoryFor(makeEndpoint func(lesson.Service) endpoint.Endpoint, client *http.Client) sd.Factory {
+func factoryFor(makeEndpoint func(question.Service) endpoint.Endpoint, client *http.Client) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
 		service, err := New(instance, client)
 		if err != nil {

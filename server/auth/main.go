@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"sample/auth/auth"
@@ -19,8 +20,12 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	port = 8001
+)
+
 var (
-	retryMax     = 3
+	retryMax     = 1
 	retryTimeout = 500 * time.Millisecond
 )
 
@@ -32,6 +37,14 @@ func main() {
 	logger := kitlog.NewJSONLogger(os.Stdout)
 
 	consulClient, err := consul.NewClient(consul.DefaultConfig())
+	if err != nil {
+		panic(err)
+	}
+	err = kitconsul.NewClient(consulClient).Register(&consul.AgentServiceRegistration{
+		Name:    "Auth",
+		Port:    port,
+		Address: "http://127.0.0.1",
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -63,8 +76,9 @@ func main() {
 	r.Handle("/auth", authHandler)
 	r.Handle("/auth/", authHandler)
 
-	log.Println("listening on", ":8001")
-	err = http.ListenAndServe(":8001", r)
+	portStr := strconv.Itoa(port)
+	log.Println("listening on", ":"+portStr)
+	err = http.ListenAndServe(":"+portStr, r)
 	if err != nil {
 		log.Fatal(err)
 	}

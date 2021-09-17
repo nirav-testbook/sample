@@ -6,14 +6,16 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/go-kit/kit/endpoint"
+	kitlog "github.com/go-kit/kit/log"
+	"github.com/go-kit/kit/sd"
+	kitconsul "github.com/go-kit/kit/sd/consul"
+	"github.com/go-kit/kit/sd/lb"
+	kithttp "github.com/go-kit/kit/transport/http"
+
 	"sample/common/auth/token"
 	chttp "sample/common/http"
 	"sample/tb/lesson"
-
-	"github.com/go-kit/kit/endpoint"
-	"github.com/go-kit/kit/sd"
-	"github.com/go-kit/kit/sd/lb"
-	kithttp "github.com/go-kit/kit/transport/http"
 )
 
 func New(instance string, client *http.Client) (lesson.Service, error) {

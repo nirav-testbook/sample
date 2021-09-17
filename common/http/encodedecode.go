@@ -33,7 +33,7 @@ func EncodeSchemaRequest(_ context.Context, r *http.Request, request interface{}
 
 type ErrResp struct {
 	Success bool   `json:"success"`
-	Message string `json:"message"`
+	Error string `json:"error"`
 }
 
 type Resp struct {
@@ -50,7 +50,7 @@ func EncodeError(ctx context.Context, err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 	json.NewEncoder(w).Encode(ErrResp{
 		Success: false,
-		Message: err.Error(),
+		Error: err.Error(),
 	})
 }
 
@@ -70,7 +70,7 @@ func DecodeResponse(ctx context.Context, r *http.Response, resp interface{}) err
 		if err != nil {
 			return err
 		}
-		return errors.New(e.Message)
+		return errors.New(e.Error)
 	}
 	var er EncodeResp
 	err := enc.Decode(&er)
