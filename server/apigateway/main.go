@@ -49,8 +49,9 @@ func main() {
 	logger := kitlog.NewJSONLogger(os.Stdout)
 
 	userInstancer := kitconsul.NewInstancer(kitConsulClient, logger, "User", nil, true)
-	userSvc := userclient.NewWithLB(userInstancer, retryMax, retryTimeout, logger, http.DefaultClient)
-	//userSvc = user.NewLogService(userSvc, logger)
+	//userSvc := userclient.NewWithLB(userInstancer, retryMax, retryTimeout, logger, http.DefaultClient)
+	userSvc := userclient.NewGRPCWithLB(userInstancer, retryMax, retryTimeout, logger)
+	userSvc = user.NewLogService(userSvc, logger)
 	userHandler := user.NewHandler(userSvc)
 
 	authInstancer := kitconsul.NewInstancer(kitConsulClient, logger, "Auth", nil, true)

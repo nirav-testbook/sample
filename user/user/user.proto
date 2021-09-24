@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+option go_package = "pb/";
+
+service User {
+	rpc Add(AddReq) returns (AddResp) {}
+}
+
+message AddReq {
+	string Name = 1;
+	string Username = 2;
+	string Password = 3;
+}
+
+message AddResp {
+	string Id = 1;
+	string Err = 2;
+}
