@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
-	"fmt"
 	"math/rand"
 	"net"
 	"os"
@@ -68,7 +68,7 @@ func main() {
 			TTL:                            "5s",
 			DeregisterCriticalServiceAfter: "24h",
 		},
-	}, logger) 
+	}, logger)
 	reg.Register()
 	go func() {
 		healthcheck.InitConsulHealthCheck(consulClient.Agent(), logger, svcId, time.Second*3)
@@ -104,7 +104,8 @@ func main() {
 	go func() {
 		c := make(chan os.Signal)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-		errc <- fmt.Errorf("%s", <-c)
+		sig := <-c
+		errc <- errors.New("received signal " + sig.String())
 	}()
 
 	go func() {

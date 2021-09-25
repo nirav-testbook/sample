@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
-	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -104,7 +104,8 @@ func main() {
 	go func() {
 		c := make(chan os.Signal)
 		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
-		errc <- fmt.Errorf("%s", <-c)
+		sig := <-c
+		errc <- errors.New("received signal " + sig.String())
 	}()
 
 	go func() {
