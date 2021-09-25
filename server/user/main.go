@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"math/rand"
 	"net"
 	"os"
@@ -21,9 +20,14 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"google.golang.org/grpc"
 
+	"sample/common/healthcheck"
 	repo "sample/user/repo/mongo"
 	"sample/user/user"
 	"sample/user/user/pb"
+)
+
+const (
+	svcName = "User"
 )
 
 var (
@@ -40,28 +44,35 @@ func main() {
 	flag.StringVar(&port, "p", "8002", "port")
 	flag.Parse()
 	addr := host + ":" + port
-
-	consulClient, err := consul.NewClient(consul.DefaultConfig())
-	if err != nil {
-		panic(err)
-	}
+	svcId := svcName + ":" + addr
 	portNum, err := strconv.Atoi(port)
-	if err != nil {
-		panic(err)
-	}
-	svc := &consul.AgentServiceRegistration{
-		ID:      "User" + " - " + addr,
-		Name:    "User",
-		Address: host,
-		Port:    portNum,
-	}
-	kitConsulClient := kitconsul.NewClient(consulClient)
-	err = kitConsulClient.Register(svc)
 	if err != nil {
 		panic(err)
 	}
 
 	logger := kitlog.NewJSONLogger(os.Stdout)
+	logger = kitlog.With(logger, "svc", svcName, "svcId", svcId)
+
+	consulClient, err := consul.NewClient(consul.DefaultConfig())
+	if err != nil {
+		panic(err)
+	}
+	kitConsulClient := kitconsul.NewClient(consulClient)
+	reg := kitconsul.NewRegistrar(kitConsulClient, &consul.AgentServiceRegistration{
+		ID:      svcId,
+		Name:    svcName,
+		Address: host,
+		Port:    portNum,
+		Check: &consul.AgentServiceCheck{
+			CheckID:                        svcId,
+			TTL:                            "5s",
+			DeregisterCriticalServiceAfter: "24h",
+		},
+	}, logger) 
+	reg.Register()
+	go func() {
+		healthcheck.InitConsulHealthCheck(consulClient.Agent(), logger, svcId, time.Second*3)
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -74,18 +85,17 @@ func main() {
 
 	userRepo, err := repo.NewUserRepo(db)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	userService := user.NewService(userRepo)
-	userService = user.NewLogService(userService, kitlog.With(logger, "service", "User"))
-	//userService = user.NewAuthService(userService, authService)
+	userService = user.NewLogService(userService, logger)
 	userHandler := user.NewGRPCHandler(userService)
 
-	log.Println("listening GRPC on", addr)
+	logger.Log("running GRPC server on", addr)
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	baseServer := grpc.NewServer(grpc.UnaryInterceptor(kitgrpc.Interceptor))
 	pb.RegisterUserServer(baseServer, userHandler)
@@ -101,10 +111,8 @@ func main() {
 		errc <- baseServer.Serve(listener)
 	}()
 
-	logger.Log("exit", <-errc)
-	err = kitConsulClient.Deregister(svc)
-	if err != nil {
-		logger.Log(err)
-	}
+	err = <-errc
+	logger.Log("exit error", err)
+	reg.Deregister()
 	listener.Close()
 }
