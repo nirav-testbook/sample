@@ -10,6 +10,10 @@ import (
 	kithttp "github.com/go-kit/kit/transport/http"
 )
 
+type Errorer interface {
+	Error() error
+}
+
 type ErrResp struct {
 	Success bool   `json:"success"`
 	Error   string `json:"error"`
@@ -35,6 +39,10 @@ func EncodeError(ctx context.Context, err error, w http.ResponseWriter) {
 
 func EncodeJsonResp(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	if e, ok := response.(Errorer); ok && e.Error() != nil {
+		EncodeError(ctx, e.Error(), w)
+		return nil
+	}
 	return json.NewEncoder(w).Encode(Resp{
 		Success: true,
 		Data:    response,
@@ -44,12 +52,12 @@ func EncodeJsonResp(ctx context.Context, w http.ResponseWriter, response interfa
 func DecodeJsonRespOf(resp interface{}) kithttp.DecodeResponseFunc {
 	return func(ctx context.Context, r *http.Response) (interface{}, error) {
 		obj := reflect.New(reflect.TypeOf(resp))
-		err := DecodeResponse(ctx, r, obj.Interface())
+		err := decodeResponse(ctx, r, obj.Interface())
 		return obj.Elem().Interface(), err
 	}
 }
 
-func DecodeResponse(ctx context.Context, r *http.Response, resp interface{}) error {
+func decodeResponse(ctx context.Context, r *http.Response, resp interface{}) error {
 	enc := json.NewDecoder(r.Body)
 	if r.StatusCode != 200 {
 		var e ErrResp
@@ -59,10 +67,10 @@ func DecodeResponse(ctx context.Context, r *http.Response, resp interface{}) err
 		}
 		return errors.New(e.Error)
 	}
-	var er EncodeResp
-	err := enc.Decode(&er)
+	var data EncodeResp
+	err := enc.Decode(&data)
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(er.Data, &resp)
+	return json.Unmarshal(data.Data, &resp)
 }

@@ -1,4 +1,5 @@
 tags
+server/apigateway/apigateway
 server/auth/auth
 server/user/user
 server/tb/tb

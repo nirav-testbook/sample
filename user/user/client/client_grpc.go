@@ -3,7 +3,6 @@ package client
 import (
 	"io"
 	"time"
-	"fmt"
 
 	"github.com/go-kit/kit/endpoint"
 	kitlog "github.com/go-kit/kit/log"
@@ -49,7 +48,6 @@ func NewGRPCWithLB(instancer *kitconsul.Instancer, retryMax int, retryTimeout ti
 
 func grpcFactoryFor(makeEndpoint func(user.Service) endpoint.Endpoint) sd.Factory {
 	return func(instance string) (endpoint.Endpoint, io.Closer, error) {
-		fmt.Println("dialing GRPC connection to", instance)
 		conn, err := grpc.Dial(instance, grpc.WithInsecure())
 		if err != nil {
 			return nil, nil, err

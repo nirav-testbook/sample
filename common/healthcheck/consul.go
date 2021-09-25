@@ -1,7 +1,6 @@
 package healthcheck
 
 import (
-	"fmt"
 	"time"
 
 	kitlog "github.com/go-kit/kit/log"
@@ -12,7 +11,7 @@ func InitConsulHealthCheck(agent *consul.Agent, logger kitlog.Logger, svcId stri
 	for {
 		err := agent.UpdateTTL(svcId, "OK", consul.HealthPassing)
 		if err != nil {
-			fmt.Println("check failed", err)
+			logger.Log("check failed", err)
 		}
 		time.Sleep(ttl)
 	}

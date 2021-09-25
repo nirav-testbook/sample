@@ -17,26 +17,29 @@ type Endpoint struct {
 	CheckPasswordEndpoint
 }
 
-type addRequest struct {
+type AddRequest struct {
 	Name     string `json:"name"`
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type addResponse struct {
-	Id string `json:"id"`
+type AddResponse struct {
+	Id  string `json:"id"`
+	Err error  `json:"error,omitempty"`
 }
+
+func (r AddResponse) Error() error {return r.Err}
 
 func MakeAddEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(addRequest)
+		req := request.(AddRequest)
 		id, err := s.Add(ctx, req.Name, req.Username, req.Password)
-		return addResponse{Id: id}, err
+		return AddResponse{Id: id, Err: err}, nil
 	}
 }
 
 func (e AddEndpoint) Add(ctx context.Context, name string, username string, password string) (id string, err error) {
-	request := addRequest{
+	request := AddRequest{
 		Name:     name,
 		Username: username,
 		Password: password,
@@ -45,57 +48,63 @@ func (e AddEndpoint) Add(ctx context.Context, name string, username string, pass
 	if err != nil {
 		return
 	}
-	resp := response.(addResponse)
-	return resp.Id, nil
+	resp := response.(AddResponse)
+	return resp.Id, resp.Err
 }
 
-type getRequest struct {
+type GetRequest struct {
 	Username string `schema:"username"`
 }
 
-type getResponse struct {
+type GetResponse struct {
 	User model.User `json:"user"`
+	Err  error      `json:"error,omitempty"`
 }
+
+func (r GetResponse) Error() error {return r.Err}
 
 func MakeGetEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(getRequest)
+		req := request.(GetRequest)
 		user, err := s.Get(ctx, req.Username)
-		return getResponse{User: user}, err
+		return GetResponse{User: user, Err: err}, nil
 	}
 }
 
 func (e GetEndpoint) Get(ctx context.Context, username string) (user model.User, err error) {
-	request := getRequest{
+	request := GetRequest{
 		Username: username,
 	}
 	response, err := e(ctx, request)
 	if err != nil {
 		return
 	}
-	resp := response.(getResponse)
-	return resp.User, nil
+	resp := response.(GetResponse)
+	return resp.User, resp.Err
 }
 
-type checkPasswordRequest struct {
+type CheckPasswordRequest struct {
 	Username string `schema:"username"`
 	Password string `schema:"password"`
 }
 
-type checkPasswordResponse struct {
-	Id string `json:"id"`
+type CheckPasswordResponse struct {
+	Id  string `json:"id"`
+	Err error  `json:"error,omitempty"`
 }
+
+func (r CheckPasswordResponse) Error() error {return r.Err}
 
 func MakeCheckPasswordEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(checkPasswordRequest)
+		req := request.(CheckPasswordRequest)
 		id, err := s.CheckPassword(ctx, req.Username, req.Password)
-		return checkPasswordResponse{Id: id}, err
+		return CheckPasswordResponse{Id: id, Err: err}, nil
 	}
 }
 
 func (e CheckPasswordEndpoint) CheckPassword(ctx context.Context, username string, password string) (id string, err error) {
-	request := checkPasswordRequest{
+	request := CheckPasswordRequest{
 		Username: username,
 		Password: password,
 	}
@@ -103,6 +112,6 @@ func (e CheckPasswordEndpoint) CheckPassword(ctx context.Context, username strin
 	if err != nil {
 		return
 	}
-	resp := response.(checkPasswordResponse)
-	return resp.Id, nil
+	resp := response.(CheckPasswordResponse)
+	return resp.Id, resp.Err
 }

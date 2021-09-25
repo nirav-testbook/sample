@@ -37,7 +37,7 @@ func New(instance string, client *http.Client) (user.Service, error) {
 		http.MethodPost,
 		copyURL(u, "/user"),
 		chttp.EncodeJsonReq,
-		user.DecodeAddResponse,
+		chttp.DecodeJsonRespOf(user.AddResponse{}),
 		opts...,
 	).Endpoint()
 
@@ -45,7 +45,7 @@ func New(instance string, client *http.Client) (user.Service, error) {
 		http.MethodGet,
 		copyURL(u, "/user"),
 		chttp.EncodeQueryReq,
-		user.DecodeGetResponse,
+		chttp.DecodeJsonRespOf(user.GetResponse{}),
 		opts...,
 	).Endpoint()
 
@@ -53,7 +53,7 @@ func New(instance string, client *http.Client) (user.Service, error) {
 		http.MethodGet,
 		copyURL(u, "/user/check"),
 		chttp.EncodeQueryReq,
-		user.DecodeCheckPasswordResponse,
+		chttp.DecodeJsonRespOf(user.CheckPasswordResponse{}),
 		opts...,
 	).Endpoint()
 

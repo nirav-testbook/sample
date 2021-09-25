@@ -14,25 +14,28 @@ type Endpoint struct {
 	VerifyTokenEndpoint
 }
 
-type signinRequest struct {
+type SigninRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
 }
 
-type signinResponse struct {
+type SigninResponse struct {
 	Token string `json:"token"`
+	Err   error  `json:"error,omitempty"`
 }
+
+func (r SigninResponse) Error() error {return r.Err}
 
 func MakeSigninEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(signinRequest)
+		req := request.(SigninRequest)
 		token, err := s.Signin(ctx, req.Username, req.Password)
-		return signinResponse{Token: token}, err
+		return SigninResponse{Token: token, Err: err}, nil
 	}
 }
 
 func (e SigninEndpoint) Signin(ctx context.Context, username string, password string) (token string, err error) {
-	request := signinRequest{
+	request := SigninRequest{
 		Username: username,
 		Password: password,
 	}
@@ -40,34 +43,37 @@ func (e SigninEndpoint) Signin(ctx context.Context, username string, password st
 	if err != nil {
 		return
 	}
-	resp := response.(signinResponse)
-	return resp.Token, nil
+	resp := response.(SigninResponse)
+	return resp.Token, resp.Err
 }
 
-type verifyTokenRequest struct {
+type VerifyTokenRequest struct {
 	Token string `schema:"token"`
 }
 
-type verifyTokenResponse struct {
+type VerifyTokenResponse struct {
 	UserID string `json:"user_id"`
+	Err    error  `json:"error,omitempty"`
 }
+
+func (r VerifyTokenResponse) Error() error {return r.Err}
 
 func MakeVerifyTokenEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(verifyTokenRequest)
+		req := request.(VerifyTokenRequest)
 		userID, err := s.VerifyToken(ctx, req.Token)
-		return verifyTokenResponse{UserID: userID}, err
+		return VerifyTokenResponse{UserID: userID, Err: err}, nil
 	}
 }
 
 func (e VerifyTokenEndpoint) VerifyToken(ctx context.Context, token string) (userID string, err error) {
-	request := verifyTokenRequest{
+	request := VerifyTokenRequest{
 		Token: token,
 	}
 	response, err := e(ctx, request)
 	if err != nil {
 		return
 	}
-	resp := response.(verifyTokenResponse)
-	return resp.UserID, nil
+	resp := response.(VerifyTokenResponse)
+	return resp.UserID, resp.Err
 }

@@ -37,7 +37,7 @@ func New(instance string, client *http.Client) (auth.Service, error) {
 		http.MethodPost,
 		copyURL(u, "/auth/signin"),
 		chttp.EncodeJsonReq,
-		auth.DecodeSigninResponse,
+		chttp.DecodeJsonRespOf(auth.SigninResponse{}),
 		opts...,
 	).Endpoint()
 
@@ -45,7 +45,7 @@ func New(instance string, client *http.Client) (auth.Service, error) {
 		http.MethodPost,
 		copyURL(u, "/auth/verify"),
 		chttp.EncodeJsonReq,
-		auth.DecodeVerifyTokenResponse,
+		chttp.DecodeJsonRespOf(auth.VerifyTokenResponse{}),
 		opts...,
 	).Endpoint()
 

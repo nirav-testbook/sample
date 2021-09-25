@@ -24,14 +24,17 @@ type AddRequest struct {
 }
 
 type AddResponse struct {
-	Id string `json:"id"`
+	Id  string `json:"id"`
+	Err error  `json:"error,omitempty"`
 }
+
+func (r AddResponse) Error() error {return r.Err}
 
 func MakeAddEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(AddRequest)
 		id, err := s.Add(ctx, req.Question, req.CorrectOptionIndex)
-		return AddResponse{Id: id}, err
+		return AddResponse{Id: id, Err: err}, nil
 	}
 }
 
@@ -45,7 +48,7 @@ func (e AddEndpoint) Add(ctx context.Context, q model.Question, correctOptionInd
 		return
 	}
 	resp := response.(AddResponse)
-	return resp.Id, nil
+	return resp.Id, resp.Err
 }
 
 type GetRequest struct {
@@ -54,13 +57,16 @@ type GetRequest struct {
 
 type GetResponse struct {
 	Question model.Question `json:"question"`
+	Err      error          `json:"error,omitempty"`
 }
+
+func (r GetResponse) Error() error {return r.Err}
 
 func MakeGetEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(GetRequest)
 		question, err := s.Get(ctx, req.Id)
-		return GetResponse{Question: question}, err
+		return GetResponse{Question: question, Err: err}, nil
 	}
 }
 
@@ -73,7 +79,7 @@ func (e GetEndpoint) Get(ctx context.Context, id string) (question model.Questio
 		return
 	}
 	resp := response.(GetResponse)
-	return resp.Question, nil
+	return resp.Question, resp.Err
 }
 
 type ListRequest struct {
@@ -82,13 +88,16 @@ type ListRequest struct {
 
 type ListResponse struct {
 	Questions []model.Question `json:"questions"`
+	Err      error          `json:"error,omitempty"`
 }
+
+func (r ListResponse) Error() error {return r.Err}
 
 func MakeListEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
 		req := request.(ListRequest)
 		questions, err := s.List(ctx, req.Ids)
-		return ListResponse{Questions: questions}, err
+		return ListResponse{Questions: questions, Err: err}, nil
 	}
 }
 
@@ -101,5 +110,5 @@ func (e ListEndpoint) List(ctx context.Context, ids []string) (questions []model
 		return
 	}
 	resp := response.(ListResponse)
-	return resp.Questions, nil
+	return resp.Questions, resp.Err
 }
