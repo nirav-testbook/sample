@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"sample/common/auth/token"
@@ -19,6 +20,9 @@ import (
 )
 
 func New(instance string, client *http.Client) (user.Service, error) {
+	if !strings.HasPrefix(instance, "http") {
+		instance = "http://" + instance
+	}
 	u, err := url.Parse(instance)
 	if err != nil {
 		return nil, err
