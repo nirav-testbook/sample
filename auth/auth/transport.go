@@ -22,14 +22,14 @@ func NewHandler(s Service) http.Handler {
 	signin := kithttp.NewServer(
 		MakeSigninEndpoint(s),
 		DecodeSigninRequest,
-		chttp.EncodeJSONResponse,
+		chttp.EncodeJsonResp,
 		opts...,
 	)
 
 	verifyToken := kithttp.NewServer(
 		MakeVerifyTokenEndpoint(s),
 		DecodeVerifyTokenRequest,
-		chttp.EncodeJSONResponse,
+		chttp.EncodeJsonResp,
 		opts...,
 	)
 

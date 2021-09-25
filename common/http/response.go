@@ -1,39 +1,18 @@
 package http
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
-	"io/ioutil"
 	"net/http"
-	"net/url"
+	"reflect"
 
-	"github.com/gorilla/schema"
+	kithttp "github.com/go-kit/kit/transport/http"
 )
-
-func EncodeJSONRequest(_ context.Context, r *http.Request, request interface{}) error {
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(request); err != nil {
-		return err
-	}
-	r.Body = ioutil.NopCloser(&buf)
-	return nil
-}
-
-func EncodeSchemaRequest(_ context.Context, r *http.Request, request interface{}) error {
-	v := url.Values{}
-	err := schema.NewEncoder().Encode(request, v)
-	if err != nil {
-		return err
-	}
-	r.URL.RawQuery = v.Encode()
-	return nil
-}
 
 type ErrResp struct {
 	Success bool   `json:"success"`
-	Error string `json:"error"`
+	Error   string `json:"error"`
 }
 
 type Resp struct {
@@ -50,16 +29,24 @@ func EncodeError(ctx context.Context, err error, w http.ResponseWriter) {
 	w.WriteHeader(http.StatusInternalServerError)
 	json.NewEncoder(w).Encode(ErrResp{
 		Success: false,
-		Error: err.Error(),
+		Error:   err.Error(),
 	})
 }
 
-func EncodeJSONResponse(ctx context.Context, w http.ResponseWriter, response interface{}) error {
+func EncodeJsonResp(ctx context.Context, w http.ResponseWriter, response interface{}) error {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	return json.NewEncoder(w).Encode(Resp{
 		Success: true,
 		Data:    response,
 	})
+}
+
+func DecodeJsonRespOf(resp interface{}) kithttp.DecodeResponseFunc {
+	return func(ctx context.Context, r *http.Response) (interface{}, error) {
+		obj := reflect.New(reflect.TypeOf(resp))
+		err := DecodeResponse(ctx, r, obj.Interface())
+		return obj.Elem().Interface(), err
+	}
 }
 
 func DecodeResponse(ctx context.Context, r *http.Response, resp interface{}) error {

@@ -36,7 +36,7 @@ func New(instance string, client *http.Client) (user.Service, error) {
 	addEndPoint := kithttp.NewClient(
 		http.MethodPost,
 		copyURL(u, "/user"),
-		chttp.EncodeJSONRequest,
+		chttp.EncodeJsonReq,
 		user.DecodeAddResponse,
 		opts...,
 	).Endpoint()
@@ -44,7 +44,7 @@ func New(instance string, client *http.Client) (user.Service, error) {
 	getEndpoint := kithttp.NewClient(
 		http.MethodGet,
 		copyURL(u, "/user"),
-		chttp.EncodeSchemaRequest,
+		chttp.EncodeQueryReq,
 		user.DecodeGetResponse,
 		opts...,
 	).Endpoint()
@@ -52,7 +52,7 @@ func New(instance string, client *http.Client) (user.Service, error) {
 	checkPasswordEndpoint := kithttp.NewClient(
 		http.MethodGet,
 		copyURL(u, "/user/check"),
-		chttp.EncodeSchemaRequest,
+		chttp.EncodeQueryReq,
 		user.DecodeCheckPasswordResponse,
 		opts...,
 	).Endpoint()

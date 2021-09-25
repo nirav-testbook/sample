@@ -36,7 +36,7 @@ func New(instance string, client *http.Client) (auth.Service, error) {
 	signinEndpoint := kithttp.NewClient(
 		http.MethodPost,
 		copyURL(u, "/auth/signin"),
-		chttp.EncodeJSONRequest,
+		chttp.EncodeJsonReq,
 		auth.DecodeSigninResponse,
 		opts...,
 	).Endpoint()
@@ -44,7 +44,7 @@ func New(instance string, client *http.Client) (auth.Service, error) {
 	verifyTokenEndpoint := kithttp.NewClient(
 		http.MethodPost,
 		copyURL(u, "/auth/verify"),
-		chttp.EncodeJSONRequest,
+		chttp.EncodeJsonReq,
 		auth.DecodeVerifyTokenResponse,
 		opts...,
 	).Endpoint()

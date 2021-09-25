@@ -18,25 +18,25 @@ type Endpoint struct {
 	ListEndpoint
 }
 
-type addRequest struct {
+type AddRequest struct {
 	Question           model.Question `json:"question"`
 	CorrectOptionIndex int            `json:"correct_option_index"`
 }
 
-type addResponse struct {
+type AddResponse struct {
 	Id string `json:"id"`
 }
 
 func MakeAddEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(addRequest)
+		req := request.(AddRequest)
 		id, err := s.Add(ctx, req.Question, req.CorrectOptionIndex)
-		return addResponse{Id: id}, err
+		return AddResponse{Id: id}, err
 	}
 }
 
 func (e AddEndpoint) Add(ctx context.Context, q model.Question, correctOptionIndex int) (qid string, err error) {
-	request := addRequest{
+	request := AddRequest{
 		Question:           q,
 		CorrectOptionIndex: correctOptionIndex,
 	}
@@ -44,62 +44,62 @@ func (e AddEndpoint) Add(ctx context.Context, q model.Question, correctOptionInd
 	if err != nil {
 		return
 	}
-	resp := response.(addResponse)
+	resp := response.(AddResponse)
 	return resp.Id, nil
 }
 
-type getRequest struct {
+type GetRequest struct {
 	Id string `schema:"id"`
 }
 
-type getResponse struct {
+type GetResponse struct {
 	Question model.Question `json:"question"`
 }
 
 func MakeGetEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(getRequest)
+		req := request.(GetRequest)
 		question, err := s.Get(ctx, req.Id)
-		return getResponse{Question: question}, err
+		return GetResponse{Question: question}, err
 	}
 }
 
 func (e GetEndpoint) Get(ctx context.Context, id string) (question model.Question, err error) {
-	request := getRequest{
+	request := GetRequest{
 		Id: id,
 	}
 	response, err := e(ctx, request)
 	if err != nil {
 		return
 	}
-	resp := response.(getResponse)
+	resp := response.(GetResponse)
 	return resp.Question, nil
 }
 
-type listRequest struct {
+type ListRequest struct {
 	Ids []string `schema:"ids"`
 }
 
-type listResponse struct {
+type ListResponse struct {
 	Questions []model.Question `json:"questions"`
 }
 
 func MakeListEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
-		req := request.(listRequest)
+		req := request.(ListRequest)
 		questions, err := s.List(ctx, req.Ids)
-		return listResponse{Questions: questions}, err
+		return ListResponse{Questions: questions}, err
 	}
 }
 
 func (e ListEndpoint) List(ctx context.Context, ids []string) (questions []model.Question, err error) {
-	request := listRequest{
+	request := ListRequest{
 		Ids: ids,
 	}
 	response, err := e(ctx, request)
 	if err != nil {
 		return
 	}
-	resp := response.(listResponse)
+	resp := response.(ListResponse)
 	return resp.Questions, nil
 }

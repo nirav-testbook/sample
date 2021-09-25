@@ -84,6 +84,7 @@ func main() {
 
 	tbInstancer := kitconsul.NewInstancer(kitConsulClient, logger, "TB", nil, true)
 	lessonSvc := lessonclient.NewWithLB(tbInstancer, retryMax, retryTimeout, logger, http.DefaultClient)
+	lessonSvc = lesson.NewLogService(lessonSvc, logger)
 	lessonHandler := lesson.NewHandler(lessonSvc)
 	questionSvc := questionclient.NewWithLB(tbInstancer, retryMax, retryTimeout, logger, http.DefaultClient)
 	questionHandler := question.NewHandler(questionSvc)

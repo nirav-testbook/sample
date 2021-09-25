@@ -36,24 +36,24 @@ func New(instance string, client *http.Client) (question.Service, error) {
 	addEndpoint := kithttp.NewClient(
 		http.MethodPost,
 		copyURL(u, "/question"),
-		chttp.EncodeJSONRequest,
-		question.DecodeAddResponse,
+		chttp.EncodeJsonReq,
+		chttp.DecodeJsonRespOf(question.AddResponse{}),
 		opts...,
 	).Endpoint()
 
 	getEndpoint := kithttp.NewClient(
 		http.MethodGet,
 		copyURL(u, "/question"),
-		chttp.EncodeSchemaRequest,
-		question.DecodeGetResponse,
+		chttp.EncodeQueryReq,
+		chttp.DecodeJsonRespOf(question.GetResponse{}),
 		opts...,
 	).Endpoint()
 
 	listEndpoint := kithttp.NewClient(
 		http.MethodGet,
 		copyURL(u, "/question/list"),
-		chttp.EncodeSchemaRequest,
-		question.DecodeListResponse,
+		chttp.EncodeQueryReq,
+		chttp.DecodeJsonRespOf(question.ListResponse{}),
 		opts...,
 	).Endpoint()
 

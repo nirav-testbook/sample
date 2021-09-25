@@ -24,21 +24,21 @@ func NewHandler(s Service) http.Handler {
 	add := kithttp.NewServer(
 		MakeAddEndpoint(s),
 		DecodeAddRequest,
-		chttp.EncodeJSONResponse,
+		chttp.EncodeJsonResp,
 		opts...,
 	)
 
 	get := kithttp.NewServer(
 		MakeGetEndpoint(s),
 		DecodeGetRequest,
-		chttp.EncodeJSONResponse,
+		chttp.EncodeJsonResp,
 		opts...,
 	)
 
 	checkPassword := kithttp.NewServer(
 		MakeCheckPasswordEndpoint(s),
 		DecodeCheckPasswordRequest,
-		chttp.EncodeJSONResponse,
+		chttp.EncodeJsonResp,
 		opts...,
 	)
 
