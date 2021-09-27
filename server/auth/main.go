@@ -89,8 +89,13 @@ func main() {
 		log.Fatal(err)
 	}
 
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.MaxIdleConns = 256
+	t.MaxIdleConnsPerHost = 256
+	httpClient := &http.Client{Transport: t}
+
 	userInstancer := kitconsul.NewInstancer(kitConsulClient, logger, "User", nil, true)
-	userService := userclient.NewWithLB(userInstancer, retryMax, retryTimeout, logger, http.DefaultClient)
+	userService := userclient.NewWithLB(userInstancer, retryMax, retryTimeout, logger, httpClient)
 
 	authService := auth.NewService(sessionRepo, userService)
 	authService = auth.NewLogService(authService, kitlog.With(logger, "service", "Auth"))

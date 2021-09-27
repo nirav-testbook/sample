@@ -72,21 +72,26 @@ func main() {
 		healthcheck.InitConsulHealthCheck(consulClient.Agent(), logger, svcId, 10*time.Second)
 	}()
 
+	t := http.DefaultTransport.(*http.Transport).Clone()
+	t.MaxIdleConns = 256
+	t.MaxIdleConnsPerHost = 256
+	httpClient := &http.Client{Transport: t}
+
 	userInstancer := kitconsul.NewInstancer(kitConsulClient, logger, "User", nil, true)
-	//userSvc := userclient.NewWithLB(userInstancer, retryMax, retryTimeout, logger, http.DefaultClient)
+	//userSvc := userclient.NewWithLB(userInstancer, retryMax, retryTimeout, logger, httpClient)
 	userSvc := userclient.NewGRPCWithLB(userInstancer, retryMax, retryTimeout, logger)
 	userSvc = user.NewLogService(userSvc, logger)
 	userHandler := user.NewHandler(userSvc)
 
 	authInstancer := kitconsul.NewInstancer(kitConsulClient, logger, "Auth", nil, true)
-	authSvc := authclient.NewWithLB(authInstancer, retryMax, retryTimeout, logger, http.DefaultClient)
+	authSvc := authclient.NewWithLB(authInstancer, retryMax, retryTimeout, logger, httpClient)
 	authHandler := auth.NewHandler(authSvc)
 
 	tbInstancer := kitconsul.NewInstancer(kitConsulClient, logger, "TB", nil, true)
-	lessonSvc := lessonclient.NewWithLB(tbInstancer, retryMax, retryTimeout, logger, http.DefaultClient)
+	lessonSvc := lessonclient.NewWithLB(tbInstancer, retryMax, retryTimeout, logger, httpClient)
 	lessonSvc = lesson.NewLogService(lessonSvc, logger)
 	lessonHandler := lesson.NewHandler(lessonSvc)
-	questionSvc := questionclient.NewWithLB(tbInstancer, retryMax, retryTimeout, logger, http.DefaultClient)
+	questionSvc := questionclient.NewWithLB(tbInstancer, retryMax, retryTimeout, logger, httpClient)
 	questionHandler := question.NewHandler(questionSvc)
 
 	r := http.NewServeMux()
