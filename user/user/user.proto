@@ -4,6 +4,8 @@ option go_package = "pb/";
 
 service User {
 	rpc Add(AddReq) returns (AddResp) {}
+	rpc Get(GetReq) returns (GetResp) {}
+	rpc CheckPassword(CheckPasswordReq) returns (CheckPasswordResp) {}
 }
 
 message AddReq {
@@ -13,6 +15,31 @@ message AddReq {
 }
 
 message AddResp {
+	string Id = 1;
+	string Err = 2;
+}
+
+message GetReq {
+	string Username = 1;
+}
+
+message UserModel {
+	string Id = 1;
+	string Name = 2;
+	string Username = 3;
+}
+
+message GetResp {
+	UserModel User = 1;
+	string Err = 2;
+}
+
+message CheckPasswordReq {
+	string Username = 1;
+	string Password = 2;
+}
+
+message CheckPasswordResp {
 	string Id = 1;
 	string Err = 2;
 }

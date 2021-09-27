@@ -50,9 +50,9 @@ func New(instance string, client *http.Client) (user.Service, error) {
 	).Endpoint()
 
 	checkPasswordEndpoint := kithttp.NewClient(
-		http.MethodGet,
+		http.MethodPost,
 		copyURL(u, "/user/check"),
-		chttp.EncodeQueryReq,
+		chttp.EncodeJsonReq,
 		chttp.DecodeJsonRespOf(user.CheckPasswordResponse{}),
 		opts...,
 	).Endpoint()

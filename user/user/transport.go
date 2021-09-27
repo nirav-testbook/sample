@@ -34,14 +34,14 @@ func NewHandler(s Service) http.Handler {
 
 	checkPassword := kithttp.NewServer(
 		MakeCheckPasswordEndpoint(s),
-		chttp.DecodeQueryReqOf(CheckPasswordRequest{}),
+		chttp.DecodeJsonReqOf(CheckPasswordRequest{}),
 		chttp.EncodeJsonResp,
 		opts...,
 	)
 
 	r.Handle("/user", add).Methods(http.MethodPost)
 	r.Handle("/user", get).Methods(http.MethodGet)
-	r.Handle("/user/check", checkPassword).Methods(http.MethodGet)
+	r.Handle("/user/check", checkPassword).Methods(http.MethodPost)
 
 	return r
 }

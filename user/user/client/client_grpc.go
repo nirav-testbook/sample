@@ -29,8 +29,30 @@ func NewGRPCClient(conn *grpc.ClientConn) (user.Service, error) {
 		options...,
 	).Endpoint()
 
+	getEndpoint := kitgrpc.NewClient(
+		conn,
+		"User",
+		"Get",
+		user.EncodeGRPCGetRequest,
+		user.DecodeGRPCGetResponse,
+		pb.GetResp{},
+		options...,
+	).Endpoint()
+
+	checkPasswordEndpoint := kitgrpc.NewClient(
+		conn,
+		"User",
+		"CheckPassword",
+		user.EncodeGRPCCheckPasswordRequest,
+		user.DecodeGRPCCheckPasswordResponse,
+		pb.CheckPasswordResp{},
+		options...,
+	).Endpoint()
+
 	return &user.Endpoint{
-		AddEndpoint: user.AddEndpoint(addEndpoint),
+		AddEndpoint:           user.AddEndpoint(addEndpoint),
+		GetEndpoint:           user.GetEndpoint(getEndpoint),
+		CheckPasswordEndpoint: user.CheckPasswordEndpoint(checkPasswordEndpoint),
 	}, nil
 }
 
@@ -42,6 +64,20 @@ func NewGRPCWithLB(instancer *kitconsul.Instancer, retryMax int, retryTimeout ti
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
 		endpoints.AddEndpoint = user.AddEndpoint(retry)
+	}
+	{
+		factory := grpcFactoryFor(user.MakeGetEndpoint)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.GetEndpoint = user.GetEndpoint(retry)
+	}
+	{
+		factory := grpcFactoryFor(user.MakeCheckPasswordEndpoint)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.CheckPasswordEndpoint = user.CheckPasswordEndpoint(retry)
 	}
 	return endpoints
 }
