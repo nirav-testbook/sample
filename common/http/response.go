@@ -50,8 +50,9 @@ func EncodeJsonResp(ctx context.Context, w http.ResponseWriter, response interfa
 }
 
 func DecodeJsonRespOf(resp interface{}) kithttp.DecodeResponseFunc {
+	t := reflect.TypeOf(resp)
 	return func(ctx context.Context, r *http.Response) (interface{}, error) {
-		obj := reflect.New(reflect.TypeOf(resp))
+		obj := reflect.New(t)
 		err := decodeResponse(ctx, r, obj.Interface())
 		return obj.Elem().Interface(), err
 	}
