@@ -26,7 +26,9 @@ func EncodeQueryReq(_ context.Context, r *http.Request, request interface{}) err
 func DecodeQueryReqOf(req interface{}) kithttp.DecodeRequestFunc {
 	return func(ctx context.Context, r *http.Request) (interface{}, error) {
 		obj := reflect.New(reflect.TypeOf(req))
-		err := schema.NewDecoder().Decode(obj.Interface(), r.URL.Query())
+		dec := schema.NewDecoder()
+		dec.IgnoreUnknownKeys(true)
+		err := dec.Decode(obj.Interface(), r.URL.Query())
 		return obj.Elem().Interface(), err
 	}
 }
