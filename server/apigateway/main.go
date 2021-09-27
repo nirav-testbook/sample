@@ -63,13 +63,13 @@ func main() {
 		Port:    portNum,
 		Check: &consul.AgentServiceCheck{
 			CheckID:                        svcId,
-			TTL:                            "5s",
+			TTL:                            "30s",
 			DeregisterCriticalServiceAfter: "24h",
 		},
 	}, logger)
 	reg.Register()
 	go func() {
-		healthcheck.InitConsulHealthCheck(consulClient.Agent(), logger, svcId, time.Second*3)
+		healthcheck.InitConsulHealthCheck(consulClient.Agent(), logger, svcId, 10*time.Second)
 	}()
 
 	userInstancer := kitconsul.NewInstancer(kitConsulClient, logger, "User", nil, true)
