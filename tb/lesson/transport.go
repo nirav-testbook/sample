@@ -39,9 +39,17 @@ func NewHandler(s Service) http.Handler {
 		opts...,
 	)
 
+	list := kithttp.NewServer(
+		MakeListEndpoint(s),
+		chttp.DecodeQueryReqOf(ListRequest{}),
+		chttp.EncodeJsonResp,
+		opts...,
+	)
+
 	r.Handle("/lesson", add).Methods(http.MethodPost)
 	r.Handle("/lesson", get).Methods(http.MethodGet)
 	r.Handle("/lesson/1", get1).Methods(http.MethodGet)
+	r.Handle("/lesson/all", list).Methods(http.MethodGet)
 
 	return r
 }
