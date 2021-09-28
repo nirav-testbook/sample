@@ -19,4 +19,5 @@ type Lesson struct {
 type LessonRepo interface {
 	Add(ctx context.Context, lesson Lesson) (err error)
 	Get(ctx context.Context, id string) (lesson Lesson, err error)
+	List(ctx context.Context) (lessons []Lesson, err error)
 }

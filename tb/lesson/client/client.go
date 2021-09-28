@@ -57,10 +57,19 @@ func New(instance string, client *http.Client) (lesson.Service, error) {
 		opts...,
 	).Endpoint()
 
+	listEndpoint := kithttp.NewClient(
+		http.MethodGet,
+		copyURL(u, "/lesson/all"),
+		chttp.EncodeQueryReq,
+		chttp.DecodeJsonRespOf(lesson.ListResponse{}),
+		opts...,
+	).Endpoint()
+
 	return &lesson.Endpoint{
 		AddEndpoint:  lesson.AddEndpoint(addEndpoint),
 		GetEndpoint:  lesson.GetEndpoint(getEndpoint),
 		Get1Endpoint: lesson.Get1Endpoint(get1Endpoint),
+		ListEndpoint: lesson.ListEndpoint(listEndpoint),
 	}, nil
 }
 
@@ -86,6 +95,13 @@ func NewWithLB(instancer *kitconsul.Instancer, retryMax int, retryTimeout time.D
 		balancer := lb.NewRoundRobin(endpointer)
 		retry := lb.Retry(retryMax, retryTimeout, balancer)
 		endpoints.Get1Endpoint = lesson.Get1Endpoint(retry)
+	}
+	{
+		factory := factoryFor(lesson.MakeListEndpoint, client)
+		endpointer := sd.NewEndpointer(instancer, factory, logger)
+		balancer := lb.NewRoundRobin(endpointer)
+		retry := lb.Retry(retryMax, retryTimeout, balancer)
+		endpoints.ListEndpoint = lesson.ListEndpoint(retry)
 	}
 	return endpoints
 }

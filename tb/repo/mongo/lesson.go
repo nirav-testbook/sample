@@ -34,3 +34,16 @@ func (repo *lessonRepo) Get(ctx context.Context, id string) (l model.Lesson, err
 	}
 	return
 }
+
+func (repo *lessonRepo) List(ctx context.Context) (lessons []model.Lesson, err error) {
+	c, err := repo.c.Find(ctx, bson.M{})
+	if err == mongo.ErrNoDocuments {
+		return
+	}
+	defer c.Close(ctx)
+	err = c.All(ctx, &lessons)
+	if err == mongo.ErrNoDocuments {
+		err = nil
+	}
+	return
+}

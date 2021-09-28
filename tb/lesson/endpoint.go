@@ -11,11 +11,13 @@ import (
 type AddEndpoint endpoint.Endpoint
 type GetEndpoint endpoint.Endpoint
 type Get1Endpoint endpoint.Endpoint
+type ListEndpoint endpoint.Endpoint
 
 type Endpoint struct {
 	AddEndpoint
 	GetEndpoint
 	Get1Endpoint
+	ListEndpoint
 }
 
 type AddRequest struct {
@@ -28,7 +30,7 @@ type AddResponse struct {
 	Err error  `json:"error,omitempty"`
 }
 
-func (r AddResponse) Error() error {return r.Err}
+func (r AddResponse) Error() error { return r.Err }
 
 func MakeAddEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
@@ -60,7 +62,7 @@ type GetResponse struct {
 	Err    error        `json:"error,omitempty"`
 }
 
-func (r GetResponse) Error() error {return r.Err}
+func (r GetResponse) Error() error { return r.Err }
 
 func MakeGetEndpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
@@ -91,7 +93,7 @@ type Get1Response struct {
 	Err    error        `json:"error,omitempty"`
 }
 
-func (r Get1Response) Error() error {return r.Err}
+func (r Get1Response) Error() error { return r.Err }
 
 func MakeGet1Endpoint(s Service) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (interface{}, error) {
@@ -111,4 +113,32 @@ func (e Get1Endpoint) Get1(ctx context.Context, id string) (lesson GetLessonRes,
 	}
 	resp := response.(Get1Response)
 	return resp.Lesson, resp.Err
+}
+
+type ListRequest struct {
+}
+
+type ListResponse struct {
+	Lessons []model.Lesson `json:"lessons"`
+	Err     error           `json:"error,omitempty"`
+}
+
+func (r ListResponse) Error() error { return r.Err }
+
+func MakeListEndpoint(s Service) endpoint.Endpoint {
+	return func(ctx context.Context, request interface{}) (interface{}, error) {
+		_ = request.(ListRequest)
+		lessons, err := s.List(ctx)
+		return ListResponse{Lessons: lessons, Err: err}, nil
+	}
+}
+
+func (e ListEndpoint) List(ctx context.Context) (lessons []model.Lesson, err error) {
+	request := ListRequest{}
+	response, err := e(ctx, request)
+	if err != nil {
+		return
+	}
+	resp := response.(ListResponse)
+	return resp.Lessons, resp.Err
 }

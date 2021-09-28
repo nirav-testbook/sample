@@ -16,6 +16,7 @@ type Service interface {
 	Add(ctx context.Context, name string, qids []string) (id string, err error)
 	Get(ctx context.Context, id string) (lessons model.Lesson, err error)
 	Get1(ctx context.Context, id string) (lesson GetLessonRes, err error)
+	List(ctx context.Context) (lesson []model.Lesson, err error)
 }
 
 type service struct {
@@ -85,4 +86,8 @@ func (s *service) Get1(ctx context.Context, id string) (lesson GetLessonRes, err
 		})
 	}
 	return
+}
+
+func (s *service) List(ctx context.Context) (lessons []model.Lesson, err error) {
+	return s.lessonRepo.List(ctx)
 }
